@@ -37,7 +37,8 @@ ThisBuild / scalacOptions ++= Seq(
   "-Ywarn-numeric-widen",
   "-Ywarn-unused",
   "-target:jvm-1.8",
-  "-encoding", "UTF-8"
+  "-encoding",
+  "UTF-8"
 )
 
 ThisBuild / versionScheme := Some("early-semver")
@@ -100,7 +101,7 @@ lazy val uberJar = (project in file("hnswlib-spark"))
         Seq("2.12.20", "2.13.16")
       }
     },
-    autoScalaLibrary   := false,
+    autoScalaLibrary := false,
     Compile / unmanagedResourceDirectories += baseDirectory.value / "src" / "main" / "python",
     Compile / unmanagedResources / includeFilter := {
       val pythonSrcDir = baseDirectory.value / "src" / "main" / "python"
@@ -243,13 +244,13 @@ lazy val cosmetic = project
     Compile / packageDoc := (uberJar / Compile / packageDoc).value,
     Compile / packageSrc := (uberJar / Compile / packageSrc).value,
     autoScalaLibrary     := false,
-    crossScalaVersions := {
+    crossScalaVersions   := {
       if (sparkVersion.value >= "4.0.0") {
         Seq("2.13.16")
       } else {
         Seq("2.12.20", "2.13.16")
       }
     },
-    sparkVersion         := sys.props.getOrElse("sparkVersion", "3.5.5"),
+    sparkVersion := sys.props.getOrElse("sparkVersion", "3.5.5"),
     publishSettings
   )
