@@ -2,6 +2,19 @@ import scalapb.compiler.Version.grpcJavaVersion
 import scalapb.compiler.Version.scalapbVersion
 import sys.process.*
 
+val hnswLibVersion = "1.2.1"
+val sparkVersion   = settingKey[String]("Spark version")
+val venvFolder     = settingKey[String]("Venv folder")
+val pythonVersion  = settingKey[String]("Python version")
+
+lazy val createVirtualEnv = taskKey[Unit]("Create venv")
+lazy val pyTest           = taskKey[Unit]("Run the python tests")
+lazy val black            = taskKey[Unit]("Run the black code formatter")
+lazy val blackCheck       = taskKey[Unit]("Run the black code formatter in check mode")
+lazy val flake8           = taskKey[Unit]("Run the flake8 style enforcer")
+lazy val pyPackage        = taskKey[Unit]("Package python code")
+lazy val pyPublish        = taskKey[Unit]("Publish python code")
+
 ThisBuild / organization := "com.github.jelmerk"
 ThisBuild / scalaVersion := "2.13.16"
 
@@ -42,6 +55,18 @@ ThisBuild / scalacOptions ++= Seq(
 
 ThisBuild / versionScheme := Some("early-semver")
 
+ThisBuild / sparkVersion := sys.props.get("sparkVersion").orElse(sys.env.get("SPARK_VERSION")).getOrElse("3.5.5")
+
+ThisBuild / pythonVersion := "python3.9"
+
+ThisBuild / crossScalaVersions := {
+  if (sparkVersion.value >= "4.0.0") {
+    Seq("2.13.16")
+  } else {
+    Seq("2.12.20", "2.13.16")
+  }
+}
+
 ThisBuild / resolvers += "Local Maven Repository" at "file://" + Path.userHome.absolutePath + "/.m2/repository"
 
 ThisBuild / scapegoatIgnoredFiles := Seq(".*/src_managed/.*")
@@ -72,18 +97,6 @@ lazy val publishSettings = Seq(
 lazy val noPublishSettings =
   publish / skip := true
 
-val hnswLibVersion = "1.2.1"
-val sparkVersion   = settingKey[String]("Spark version")
-val venvFolder     = settingKey[String]("Venv folder")
-val pythonVersion  = settingKey[String]("Python version")
-
-lazy val createVirtualEnv = taskKey[Unit]("Create venv")
-lazy val pyTest           = taskKey[Unit]("Run the python tests")
-lazy val black            = taskKey[Unit]("Run the black code formatter")
-lazy val blackCheck       = taskKey[Unit]("Run the black code formatter in check mode")
-lazy val flake8           = taskKey[Unit]("Run the flake8 style enforcer")
-lazy val pyPackage        = taskKey[Unit]("Package python code")
-lazy val pyPublish        = taskKey[Unit]("Publish python code")
 
 lazy val root = (project in file("."))
   .aggregate(uberJar, cosmetic)
@@ -93,13 +106,6 @@ lazy val uberJar = (project in file("hnswlib-spark"))
   .settings(
     name := s"hnswlib-spark-uberjar_${sparkVersion.value.split('.').take(2).mkString("_")}",
     noPublishSettings,
-    crossScalaVersions := {
-      if (sparkVersion.value >= "4.0.0") {
-        Seq("2.13.16")
-      } else {
-        Seq("2.12.20", "2.13.16")
-      }
-    },
     autoScalaLibrary   := false,
     Compile / unmanagedResourceDirectories += baseDirectory.value / "src" / "main" / "python",
     Compile / unmanagedResources / includeFilter := {
@@ -154,9 +160,7 @@ lazy val uberJar = (project in file("hnswlib-spark"))
     Compile / PB.targets := Seq(
       scalapb.gen() -> (Compile / sourceManaged).value / "scalapb"
     ),
-    sparkVersion     := sys.props.getOrElse("sparkVersion", "3.5.5"),
     venvFolder       := s"${baseDirectory.value}/.venv",
-    pythonVersion    := "python3.9",
     createVirtualEnv := {
       val ret = (
         s"${pythonVersion.value} -m venv ${venvFolder.value}" #&&
@@ -243,13 +247,5 @@ lazy val cosmetic = project
     Compile / packageDoc := (uberJar / Compile / packageDoc).value,
     Compile / packageSrc := (uberJar / Compile / packageSrc).value,
     autoScalaLibrary     := false,
-    crossScalaVersions := {
-      if (sparkVersion.value >= "4.0.0") {
-        Seq("2.13.16")
-      } else {
-        Seq("2.12.20", "2.13.16")
-      }
-    },
-    sparkVersion         := sys.props.getOrElse("sparkVersion", "3.5.5"),
     publishSettings
   )
