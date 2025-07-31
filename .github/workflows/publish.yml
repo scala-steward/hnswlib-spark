@@ -47,7 +47,7 @@ jobs:
         run: git config --global --add safe.directory '*'
       - name: Upload to Maven Central
         run: |
-          sbt clean +publishSigned -DsparkVersion="$SPARK_VERSION" sonatypeBundleRelease
+          sbt clean +publishSigned sonatypeBundleRelease
 
   publish-pypi-artifacts:
     runs-on: ubuntu-latest

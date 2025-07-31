@@ -50,4 +50,4 @@ jobs:
           timeout_minutes: 5
           max_attempts: 3
           command: |
-            sbt clean scalafmtCheckAll scapegoat blackCheck flake8 +test pyTest -DsparkVersion="$SPARK_VERSION"
+            sbt clean scalafmtCheckAll scapegoat blackCheck flake8 +test pyTest
